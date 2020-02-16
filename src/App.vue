@@ -53,6 +53,23 @@
               {value: true, icon: 'sort'},
             ]"
           ></q-btn-toggle>
+          <q-btn
+            dense
+            flat
+            color="" 
+            icon="more_vert"
+          >
+            <q-menu persistent auto-close>
+              <q-list style="min-width: 100px">
+                <q-item clickable>
+                  <q-item-section>Export to JSON</q-item-section>
+                </q-item>
+                <q-item clickable>
+                  <q-item-section>Save all pages</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
         </div>
         <div class="col column full-width">
           <q-virtual-scroll
@@ -88,8 +105,8 @@
           </q-virtual-scroll>
         </div>
         <div class="col-auto column bg-grey-2">
-          <div class="col-auto q-pa-sm">
-            {{ aList.length }}
+          <div class="col-auto q-pa-sm text-grey-9">
+            {{ aFilteredList.length }} / {{ aList.length }}
           </div>
           <div class="col">
 
@@ -186,7 +203,7 @@ export default {
       var aList = oThis.aList.slice();
 
       if (oThis.bEnableListFilter) {
-        aList = aList.filter((v) => !!~v.title.indexOf(oThis.sListFilter) );
+        aList = aList.filter((v) => !!~v.sTitle.indexOf(oThis.sListFilter) );
       }
 
       if (oThis.bReverseSort) {
