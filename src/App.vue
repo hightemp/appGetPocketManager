@@ -9,16 +9,25 @@
       webpreferences="webSecurity=false, devTools=true"
     /><!-- nodeintegration -->
     <template v-else>
-      <div class="col column">
+      <div class="col-4 column full-height relative-position">
         <div class="col-auto row">
-          <q-input class="col" v-model="sListFilter" type="text" label="Filter..." />
+          <q-input
+            dense
+            filled
+            class="col" 
+            v-model="sListFilter" 
+            type="text" 
+            label="Filter..." 
+          />
           <q-btn-toggle
             v-model="bEnableListFilter"
+            dense
             clearable
             spread
             no-caps
             square
             unelevated
+            filled
             toggle-color="primary"
             color="white"
             text-color="black"
@@ -27,39 +36,74 @@
               {value: true, icon: 'filter_list'},
             ]"
           ></q-btn-toggle>
-        </div>  
-        <q-virtual-scroll
-          class="col-4 full-height"
-          style=""
-          :items="aList"
-          bordered 
-          separator
-        >
-          <template v-slot="{ item, index }">
-            <q-item
-              :key="index"
-              dense
-              :active="oSelectedItem==item"
-              active-class="bg-primary text-white"
-              @click="oSelectedItem=item"
-            >
-              <!--q-item-section caption side left>
-                {{ item.given_title }}
-              </q-item-section-->
-              <q-item-section>
-                <q-item-label>
-                  {{ item.given_title }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </template>
-        </q-virtual-scroll>
+          <q-btn-toggle
+            v-model="bReverseSort"
+            dense
+            clearable
+            spread
+            no-caps
+            square
+            unelevated
+            filled
+            toggle-color="primary"
+            color="white"
+            text-color="black"
+            title="Reverse sort"
+            :options="[
+              {value: true, icon: 'sort'},
+            ]"
+          ></q-btn-toggle>
+        </div>
+        <div class="col column full-width">
+          <q-virtual-scroll
+            class="full-height full-width"
+            style=""
+            :items="aFilteredList"
+            bordered 
+            separator
+          >
+            <template v-slot="{ item, index }">
+              <q-item
+                :key="index"
+                clickable 
+                v-ripple
+                dense
+                :active="oSelectedItem==item"
+                active-class="bg-primary text-white"
+                @click="oSelectedItem=item"
+              >
+                <q-item-section caption side left>
+                  {{ item.sAddedDateTime }}
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>
+                    {{ item.sTitle }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ item.sURL }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-virtual-scroll>
+        </div>
+        <div class="col-auto column bg-grey-2">
+          <div class="col-auto q-pa-sm">
+            {{ aList.length }}
+          </div>
+          <div class="col">
+
+          </div>
+        </div>
+        <q-inner-loading :showing="bListIsLoading">
+          <q-spinner-gears size="50px" color="primary" />
+        </q-inner-loading>
       </div>
-      <div class="col-8">
+      <div class="col-8 full-height">
         <webview 
-          v-if="oSelectedItem && oSelectedItem.given_url"
+          v-if="oSelectedItem && oSelectedItem.sURL"
           ref="webview"
-          :src="oSelectedItem.given_url" 
+          :src="oSelectedItem.sURL" 
           class="full-height full-width"
         ></webview>
       </div>
@@ -67,10 +111,22 @@
   </div>
 </template>
 
+<style>
+.q-item, .q-item * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.text-white * {
+  color: white !important;
+}
+</style>
+
 <script>
 const fs = require('fs');
 const axios = require('axios');
 import Vue from 'vue';
+
+import moment from 'moment'
 
 var { $err, $log } = require('./lib/log');
 
@@ -87,21 +143,24 @@ var oAPI = null;
 
 import { Notify } from 'quasar'
 
+/**
+ * { "item_id": "2886683991", "resolved_id": "2886683991", "given_url": "https://eyegod.info/", "given_title": "", "favorite": "0", "status": "0", "time_added": "1581862949", "time_updated": "1581862951", "time_read": "0", "time_favorited": "0", "sort_id": 7, "resolved_title": "Телеграм бот Глаз Бога.", "resolved_url": "https://eyegod.info/", "excerpt": "Поиск информации Телеграм Бот \"Eye Of God\" поможет найти человека по фото, по номеру телефона найти его владельца, узнать кто является держателем банковской карты и его", "is_article": "0", "is_index": "1", "has_video": "1", "has_image": "1", "word_count": "93", "lang": "", "listen_duration_estimate": 36 }
+ */
+
 export default {
   name: 'App',
-
-  computed: {
-    
-  },
 
   data()
   {
     return {
-      oList: {},
+      // oList: {},
       aList: [],
 
       sListFilter: "",
       bEnableListFilter: false,
+      bReverseSort: false,
+
+      bListIsLoading: false,
 
       sPreviewURL: "",
 
@@ -119,6 +178,25 @@ export default {
     };
   },
 
+  computed: {
+    aFilteredList()
+    {
+      var oThis = this;
+
+      var aList = oThis.aList.slice();
+
+      if (oThis.bEnableListFilter) {
+        aList = aList.filter((v) => !!~v.title.indexOf(oThis.sListFilter) );
+      }
+
+      if (oThis.bReverseSort) {
+        aList = aList.reverse();
+      }
+
+      return aList;
+    }
+  },
+
   methods: {
     async fnUpdateList()
     {
@@ -132,11 +210,32 @@ export default {
 
       $log('fnUpdateList >> 2');
 
-      var oList = await oAPI.fnGetAll();
-      
-      Vue.set(oThis, 'oList', oList);
+      oThis.bListIsLoading = true;
 
-      oThis.aList = Object.values(oList);
+      try {
+        var oList = await oAPI.fnGetAll();
+
+        oThis.bListIsLoading = false;
+        
+        // Vue.set(oThis, 'oList', oList);
+
+        oThis.aList = Object.values(oList).sort((a, b) => b.time_added-a.time_added).map((v) => {
+          Object.defineProperty(v, 'sTitle', { 
+            get() { return this.resolved_title ? this.resolved_title : this.given_title }
+          });
+
+          Object.defineProperty(v, 'sURL', { 
+            get() { return this.resolved_url ? this.resolved_url : this.given_url }
+          });
+
+          v.sAddedDateTime = moment(v.time_added*1000).format("DD.MM.YYYY HH:mm");
+
+          return v;
+        });
+      } catch (oError) {
+        oThis.bListIsLoading = false;
+        $err(oError);
+      }
     },
 
     async fnAuth()
