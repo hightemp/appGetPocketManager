@@ -61,10 +61,10 @@
           >
             <q-menu persistent auto-close>
               <q-list style="min-width: 100px">
-                <q-item clickable>
+                <q-item clickable @click="fnExportListToJSON">
                   <q-item-section>Export to JSON</q-item-section>
                 </q-item>
-                <q-item clickable>
+                <q-item clickable @click="fnSaveAllPages">
                   <q-item-section>Save all pages</q-item-section>
                 </q-item>
               </q-list>
@@ -145,7 +145,8 @@ import Vue from 'vue';
 
 import moment from 'moment'
 
-var { $err, $log } = require('./lib/log');
+const { $err, $log } = require('./lib/log');
+const { fnSaveToJSONFile } = require('./lib/utils');
 
 const oAPIKeys = require('./config/api_keys.json');
 
@@ -215,6 +216,20 @@ export default {
   },
 
   methods: {
+    fnExportListToJSON()
+    {
+      var oThis = this;
+
+      fnSaveToJSONFile("list.json", oThis.aFilteredList);
+
+      oThis.fnShowNotification("Saved to list.json");
+    },
+
+    fnSaveAllPages()
+    {
+
+    },
+
     async fnUpdateList()
     {
       var oThis = this;
@@ -329,6 +344,15 @@ export default {
       }) 
     },
 
+    fnShowNotification(sMessage, oOptions={})
+    {
+      Notify.create({
+        position: 'top-right',
+        message: sMessage,
+        ...oOptions
+      });
+    },
+
     fnShowError(oError)
     {
       var sError = oError.toString();
@@ -337,11 +361,9 @@ export default {
         sError = oError.response.headers['x-error'];
       }
 
-      Notify.create({
-        position: 'top-right',
-        message: sError
-      });
-      console.error(oError);
+      oThis.fnShowNotification(sError, { type: 'negative' });
+
+      $err(oError);
     },
 
     fnLoadConfig()
