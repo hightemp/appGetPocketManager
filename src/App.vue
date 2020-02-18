@@ -53,6 +53,23 @@
               {value: true, icon: 'sort'},
             ]"
           ></q-btn-toggle>
+          <q-btn-toggle
+            v-model="bShowGrouped"
+            dense
+            clearable
+            spread
+            no-caps
+            square
+            unelevated
+            filled
+            toggle-color="primary"
+            color="white"
+            text-color="black"
+            title="Show grouped"
+            :options="[
+              {value: true, icon: 'group_work'},
+            ]"
+          ></q-btn-toggle>   
           <q-btn
             dense
             flat
@@ -73,6 +90,53 @@
         </div>
         <div class="col column full-width">
           <q-virtual-scroll
+            v-if="bShowGrouped"
+            style=""
+            class="col full-width"
+            :items="aFilteredDomainsList"
+            separator
+          >
+            <template v-slot="{ item, index }">
+              <q-item
+                :key="index"
+                dense
+              >
+                <q-item-section>
+                  <q-item-label>
+                    {{ item }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-virtual-scroll>
+          <q-virtual-scroll
+            v-if="bShowGrouped"
+            style=""
+            class="col full-width"
+            :items="aFilteredGroupedLists"
+            separator
+          >
+            <template v-slot="{ item, index }">
+              <q-item
+                :key="index"
+                dense
+              >
+                <q-item-section caption side left>
+                  {{ item.sAddedDateTime }}
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>
+                    {{ item.sTitle }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ item.sURL }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-virtual-scroll>
+          <q-virtual-scroll
+            v-if="!bShowGrouped"
             class="full-height full-width"
             style=""
             :items="aFilteredList"
@@ -145,6 +209,8 @@ import Vue from 'vue';
 
 import moment from 'moment'
 
+const getFavicons = require('get-website-favicon')
+
 const { $err, $log } = require('./lib/log');
 const { fnSaveToJSONFile } = require('./lib/utils');
 
@@ -173,15 +239,20 @@ export default {
     return {
       // oList: {},
       aList: [],
+      aDomainsList: [],
+      aGroupedLists: [],
+      oDomainFavIcons: {},
 
       sListFilter: "",
       bEnableListFilter: false,
       bReverseSort: false,
+      bShowGrouped: false,
 
       bListIsLoading: false,
 
       sPreviewURL: "",
 
+      iSelectedDomain: -1,
       // iSelectedIndex: -1,
       oSelectedItem: null,
 
@@ -212,6 +283,43 @@ export default {
       }
 
       return aList;
+    },
+    aFilteredGroupedLists()
+    {
+      var oThis = this;
+      var aGroup = oThis.aGroupedLists[oThis.iSelectedDomain];
+
+      if (!aGroup) {
+        return;
+      }
+
+      var aGroupedLists = aGroup.slice();
+
+      if (oThis.bEnableListFilter) {
+        aGroupedLists = aGroupedLists.filter((v) => !!~v.sTitle.indexOf(oThis.sListFilter) );
+      }
+
+      if (oThis.bReverseSort) {
+        aGroupedLists = aGroupedLists.reverse();
+      }
+
+      return aGroupedLists;
+    },
+    aFilteredDomainsList()
+    {
+      var oThis = this;
+
+      var aDomainsList = oThis.aDomainsList.slice();
+
+      if (oThis.bEnableListFilter) {
+        aDomainsList = aDomainsList.filter((v) => !!~v.indexOf(oThis.sListFilter) );
+      }
+
+      if (oThis.bReverseSort) {
+        aDomainsList = aDomainsList.reverse();
+      }
+
+      return aDomainsList;
     }
   },
 
@@ -262,8 +370,32 @@ export default {
 
           v.sAddedDateTime = moment(v.time_added*1000).format("DD.MM.YYYY HH:mm");
 
+          v.sDomain = v.sURL.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+
           return v;
         });
+
+        oThis.aList.forEach((oItem) => {
+          var sDomain = oItem.sDomain;
+
+          var iIndex = oThis.aDomainsList.indexOf(sDomain);
+
+          if (!~iIndex) {
+            oThis.aDomainsList.push(sDomain);
+          }
+
+          if (!oThis.aGroupedLists[iIndex]) {
+            oThis.aGroupedLists[iIndex] = [];
+          }
+
+          /*
+          getFavicons(sDomain).then(data => {
+            oThis.oDomainFavIcons[sDomain] = data.icons;
+          });
+          */
+
+          oThis.aGroupedLists[iIndex].push(oItem);
+        })
       } catch (oError) {
         oThis.bListIsLoading = false;
         $err(oError);
