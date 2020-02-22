@@ -6,188 +6,233 @@
       disablewebsecurity 
        
       v-if="!bAuthed"
-      webpreferences="webSecurity=false, devTools=true"
+      _webpreferences="webSecurity=false, devTools=true"
     /><!-- nodeintegration -->
     <template v-else>
-      <div class="col-4 column full-height relative-position">
-        <div class="col-auto row">
-          <q-input
-            dense
-            filled
-            class="col" 
-            v-model="sListFilter" 
-            type="text" 
-            label="Filter..." 
-          />
-          <q-btn-toggle
-            v-model="bEnableListFilter"
-            dense
-            clearable
-            spread
-            no-caps
-            square
-            unelevated
-            filled
-            toggle-color="primary"
-            color="white"
-            text-color="black"
-            title="Filter"
-            :options="[
-              {value: true, icon: 'filter_list'},
-            ]"
-          ></q-btn-toggle>
-          <q-btn-toggle
-            v-model="bReverseSort"
-            dense
-            clearable
-            spread
-            no-caps
-            square
-            unelevated
-            filled
-            toggle-color="primary"
-            color="white"
-            text-color="black"
-            title="Reverse sort"
-            :options="[
-              {value: true, icon: 'sort'},
-            ]"
-          ></q-btn-toggle>
-          <q-btn-toggle
-            v-model="bShowGrouped"
-            dense
-            clearable
-            spread
-            no-caps
-            square
-            unelevated
-            filled
-            toggle-color="primary"
-            color="white"
-            text-color="black"
-            title="Show grouped"
-            :options="[
-              {value: true, icon: 'group_work'},
-            ]"
-          ></q-btn-toggle>   
-          <q-btn
-            dense
-            flat
-            color="" 
-            icon="more_vert"
-          >
-            <q-menu persistent auto-close>
-              <q-list style="min-width: 100px">
-                <q-item clickable @click="fnExportListToJSON">
-                  <q-item-section>Export to JSON</q-item-section>
-                </q-item>
-                <q-item clickable @click="fnSaveAllPages">
-                  <q-item-section>Save all pages</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
-        </div>
-        <div class="col column full-width">
-          <q-virtual-scroll
-            v-if="bShowGrouped"
-            style=""
-            class="col full-width"
-            :items="aFilteredDomainsList"
-            separator
-          >
-            <template v-slot="{ item, index }">
-              <q-item
-                :key="index"
-                dense
-              >
-                <q-item-section>
-                  <q-item-label>
-                    {{ item }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-virtual-scroll>
-          <q-virtual-scroll
-            v-if="bShowGrouped"
-            style=""
-            class="col full-width"
-            :items="aFilteredGroupedLists"
-            separator
-          >
-            <template v-slot="{ item, index }">
-              <q-item
-                :key="index"
-                dense
-              >
-                <q-item-section caption side left>
-                  {{ item.sAddedDateTime }}
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                    {{ item.sTitle }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    {{ item.sURL }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-virtual-scroll>
-          <q-virtual-scroll
-            v-if="!bShowGrouped"
-            class="full-height full-width"
-            style=""
-            :items="aFilteredList"
-            bordered 
-            separator
-          >
-            <template v-slot="{ item, index }">
-              <q-item
-                :key="index"
-                clickable 
-                v-ripple
-                dense
-                :active="oSelectedItem==item"
-                active-class="bg-primary text-white"
-                @click="oSelectedItem=item"
-              >
-                <q-item-section caption side left>
-                  {{ item.sAddedDateTime }}
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>
-                    {{ item.sTitle }}
-                  </q-item-label>
-                  <q-item-label caption>
-                    {{ item.sURL }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-virtual-scroll>
-        </div>
-        <div class="col-auto column bg-grey-2">
-          <div class="col-auto q-pa-sm text-grey-9">
-            {{ aFilteredList.length }} / {{ aList.length }}
+      <q-splitter
+        v-model="iSplitterSize"
+        style=""
+        class="full-height full-width"
+        vertical
+      >
+        <template v-slot:before>
+          <div class="col column full-height">
+          <div class="col-auto row">
+            <q-input
+              dense
+              filled
+              class="col" 
+              v-model="sListFilter" 
+              type="text" 
+              label="Filter..." 
+            />
+            <q-btn-toggle
+              v-model="bEnableListFilter"
+              dense
+              clearable
+              spread
+              no-caps
+              square
+              unelevated
+              filled
+              toggle-color="primary"
+              color="white"
+              text-color="black"
+              title="Filter"
+              :options="[
+                {value: true, icon: 'filter_list'},
+              ]"
+            ></q-btn-toggle>
+            <q-btn-toggle
+              v-model="bReverseSort"
+              dense
+              clearable
+              spread
+              no-caps
+              square
+              unelevated
+              filled
+              toggle-color="primary"
+              color="white"
+              text-color="black"
+              title="Reverse sort"
+              :options="[
+                {value: true, icon: 'sort'},
+              ]"
+            ></q-btn-toggle>
+            <q-btn-toggle
+              v-model="bShowGrouped"
+              dense
+              clearable
+              spread
+              no-caps
+              square
+              unelevated
+              filled
+              toggle-color="primary"
+              color="white"
+              text-color="black"
+              title="Show grouped"
+              :options="[
+                {value: true, icon: 'group_work'},
+              ]"
+            ></q-btn-toggle>   
+            <q-btn
+              dense
+              flat
+              color="" 
+              icon="more_vert"
+            >
+              <q-menu persistent auto-close>
+                <q-list style="min-width: 100px">
+                  <q-item clickable @click="fnExportListToJSON">
+                    <q-item-section>Export to JSON</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="fnSaveAllPages">
+                    <q-item-section>Save all pages</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
+            </q-btn>
           </div>
-          <div class="col">
+          <div class="col column full-width">
+            <!-- Grouped list -->
+            <q-virtual-scroll
+              v-if="bShowGrouped"
+              style=""
+              class="col full-width"
+              :items="aFilteredDomainsList"
+              separator
+            >
+              <template v-slot="{ item, index }">
+                <q-item
+                  :key="index"
+                  clickable 
+                  v-ripple
+                  dense
+                  :active="iSelectedDomain==index"
+                  active-class="bg-primary text-white"
+                  @click="iSelectedDomain=index"
+                >
+                  <q-item-section avatar>
+                    <img :src="aFavIconList[index]" width="32">
+                  </q-item-section>
 
+                  <q-item-section>
+                    <q-item-label>
+                      {{ item }}
+                    </q-item-label>  
+                  </q-item-section>
+
+                  <q-item-section side right>
+                    <q-badge color="primary" :label="aGroupedLists[index].length" />
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-virtual-scroll>
+            <q-virtual-scroll
+              v-if="bShowGrouped && ~iSelectedDomain"
+              style=""
+              class="col full-width"
+              :items="aFilteredGroupedLists"
+              separator
+            >
+              <template v-slot="{ item, index }">
+                <q-item
+                  :key="index"
+                  clickable 
+                  v-ripple
+                  dense
+                  :active="oSelectedItem==item"
+                  active-class="bg-primary text-white"
+                  @click="oSelectedItem=item"
+                >
+                  <q-item-section caption side left>
+                    {{ item.sAddedDateTime }}
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>
+                      {{ item.sTitle }}
+                    </q-item-label>
+                    <q-item-label caption>
+                      {{ item.sURL }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-virtual-scroll>
+            <div 
+              v-if="bShowGrouped && !~iSelectedDomain"
+              class="col full-width bg-grey-2"
+              style="align-items: center; justify-content: center; justify-items: center;display: flex;color: #555;font-size: 25px;"
+            >
+              No group selected
+            </div>
+
+            <!-- List -->
+            <q-virtual-scroll
+              v-if="!bShowGrouped"
+              class="full-height full-width"
+              style=""
+              :items="aFilteredList"
+              bordered 
+              separator
+            >
+              <template v-slot="{ item, index }">
+                <q-item
+                  :key="index"
+                  clickable 
+                  v-ripple
+                  dense
+                  :active="oSelectedItem==item"
+                  active-class="bg-primary text-white"
+                  @click="oSelectedItem=item"
+                >
+                  <q-item-section caption side left>
+                    {{ item.sAddedDateTime }}
+                  </q-item-section>
+                  <q-item-section avatar>
+                    <img :src="item.sFavIcon" width="32">
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>
+                      {{ item.sTitle }}
+                    </q-item-label>
+                    <q-item-label caption>
+                      {{ item.sURL }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </template>
+            </q-virtual-scroll>
           </div>
-        </div>
-        <q-inner-loading :showing="bListIsLoading">
-          <q-spinner-gears size="50px" color="primary" />
-        </q-inner-loading>
-      </div>
-      <div class="col-8 full-height">
-        <webview 
-          v-if="oSelectedItem && oSelectedItem.sURL"
-          ref="webview"
-          :src="oSelectedItem.sURL" 
-          class="full-height full-width"
-        ></webview>
-      </div>
+          <div class="col-auto column bg-grey-2">
+            <div class="col-auto q-pa-sm text-grey-9">
+              {{ aFilteredList.length }} / {{ aList.length }}
+            </div>
+            <div class="col">
+
+            </div>
+          </div>
+          <q-inner-loading :showing="bListIsLoading">
+            <q-spinner-gears size="50px" color="primary" />
+          </q-inner-loading>   
+          </div>       
+        </template>
+        <template v-slot:after>
+          <div
+            v-if="oSelectedItem && oSelectedItem.sURL" 
+            class="col column full-height"
+          >
+            <q-input v-model="oSelectedItem.sURL" readonly type="text" label="URL" />
+            <webview 
+              ref="webview"
+              :src="oSelectedItem.sURL" 
+              class="col full-height full-width"
+            ></webview> 
+          </div>
+        </template>
+      </q-splitter>
     </template>
   </div>
 </template>
@@ -237,10 +282,13 @@ export default {
   data()
   {
     return {
+      iSplitterSize: 50,
+
       // oList: {},
       aList: [],
       aDomainsList: [],
       aGroupedLists: [],
+      aFavIconList: [],
       oDomainFavIcons: {},
 
       sListFilter: "",
@@ -380,8 +428,21 @@ export default {
 
           var iIndex = oThis.aDomainsList.indexOf(sDomain);
 
+          var sFavIcon = oItem.sURL.replace(/(^https?:\/\/[^\/]*?)\/.*?$/, '$1')+'/favicon.ico';
+          var iFavIconIndex = oThis.aFavIconList.indexOf(sFavIcon);
+
+          if (!~iFavIconIndex) {
+            iFavIconIndex = oThis.aFavIconList.push(sFavIcon) - 1;
+          }
+
+          oItem.iFavIconIndex = iFavIconIndex;
+
+          Object.defineProperty(oItem, 'sFavIcon', { 
+            get() { return oThis.aFavIconList[this.iFavIconIndex] }
+          });
+
           if (!~iIndex) {
-            oThis.aDomainsList.push(sDomain);
+            iIndex = oThis.aDomainsList.push(sDomain) - 1;            
           }
 
           if (!oThis.aGroupedLists[iIndex]) {
