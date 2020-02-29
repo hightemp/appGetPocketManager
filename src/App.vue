@@ -109,8 +109,11 @@
             >
               <q-menu persistent auto-close>
                 <q-list style="min-width: 100px">
-                  <q-item clickable @click="fnExportListToJSON">
-                    <q-item-section>Export to JSON</q-item-section>
+                  <q-item clickable @click="fnExportFilteredListToJSON">
+                    <q-item-section>Export filtered list to JSON</q-item-section>
+                  </q-item>
+                  <q-item clickable @click="fnExportGroupedListToJSON">
+                    <q-item-section>Export grouped list to JSON</q-item-section>
                   </q-item>
                   <q-item clickable @click="fnSaveAllPages">
                     <q-item-section>Save all pages</q-item-section>
@@ -526,9 +529,33 @@ export default {
       $log('fnExportListToJSON');
       var oThis = this;
 
-      fnSaveToJSONFile("list.json", oThis.aFilteredList);
+      fnSaveToJSONFile("list.json", oThis.aList);
 
       oThis.fnShowNotification("Saved to list.json");
+    },
+
+    fnExportFilteredListToJSON()
+    {
+      $log('fnExportFilteredListToJSON');
+      var oThis = this;
+
+      fnSaveToJSONFile("filtered_list.json", oThis.aFilteredList);
+
+      oThis.fnShowNotification("Saved to filtered_list.json");
+    },
+
+    fnExportGroupedListToJSON()
+    {
+      $log('fnExportGroupedListToJSON');
+      var oThis = this;
+
+      fnSaveToJSONFile("grouped_list.json", {
+        aDomainsList: oThis.aDomainsList,
+        aFavIconList: oThis.aFavIconList,
+        aGroupedLists: oThis.aGroupedLists
+      });
+
+      oThis.fnShowNotification("Saved to grouped_list.json");
     },
 
     fnSaveAllPages()
