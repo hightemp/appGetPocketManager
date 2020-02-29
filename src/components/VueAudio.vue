@@ -11,7 +11,6 @@
 
 <script>
 const fs = require('fs');
-const dataurl = require('dataurl');
 
 export const baseVolumeValue = 7.5
 let audio, uuid
@@ -58,7 +57,8 @@ export default {
       }
 
       var oData = fs.readFileSync(oThis.file);
-      oThis.sCachedFileDataURL = 'data:audio/mp3;base64,'+oData.toString('base64'); // dataurl.convert({ oData, mimetype: 'audio/mp3' });
+      oThis.sCachedFileDataURL = 'data:audio/mp3;base64,'+oData.toString('base64');
+
       return oThis.sCachedFileDataURL;
     },
     duration: function () {

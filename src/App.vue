@@ -334,8 +334,6 @@ var oAPI = null;
 
 import { Notify } from 'quasar'
 
-import {Howl, Howler} from 'howler';
-
 // import { rootPath } from 'electron-root-path';
 
 const appPath = process.env.NODE_ENV === 'production' ? app.getAppPath() : path.join(__dirname, '..');
@@ -349,10 +347,6 @@ var sSoundPath = path.join(appPath, 'src/statics/sounds/Freesound -  320655__rho
 // $log('__dirname', __dirname);
 // $log('appPath', appPath, fs.existsSync(appPath));
 // $log('sSoundPath', sSoundPath, fs.existsSync(sSoundPath), appPath, fs.existsSync(appPath));
-
-var oSound = new Howl({
-  src: [sSoundPath]
-});
 
 // throw new Error();
 
@@ -479,10 +473,9 @@ export default {
 
     fnPlayAudioSignal()
     {
-      $log('fnPlayAudioSignal', oSound);
-      // oSound.play();
-
       var oThis = this;
+
+      $log('fnPlayAudioSignal - oThis.$refs.vue_audio', oThis.$refs.vue_audio);
 
       oThis.$refs.vue_audio.play();
     },
