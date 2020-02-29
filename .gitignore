@@ -32,6 +32,3 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
-
-config.json
-list.json

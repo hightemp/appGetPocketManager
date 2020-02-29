@@ -112,7 +112,7 @@
                   <q-item clickable @click="fnExportFilteredListToJSON">
                     <q-item-section>Export filtered list to JSON</q-item-section>
                   </q-item>
-                  <q-item clickable @click="fnExportGroupedListToJSON">
+                  <q-item clickable @click="fnExportFilteredGroupedListToJSON">
                     <q-item-section>Export grouped list to JSON</q-item-section>
                   </q-item>
                   <q-item clickable @click="fnSaveAllPages">
@@ -143,7 +143,13 @@
                   @click="oConfig.iSelectedDomain=index"
                 >
                   <q-item-section avatar>
-                    <img :src="aFavIconList[index]" width="32">
+                    <img 
+                      v-if="!~aWithoutFavIconList.indexOf(aFavIconList[index])" 
+                      :src="aFavIconList[index]" 
+                      @error="aWithoutFavIconList.push(aFavIconList[index])" 
+                      width="24"
+                    >
+                    <q-icon v-else name="photo" width="24" />
                   </q-item-section>
 
                   <q-item-section>
@@ -221,7 +227,13 @@
                     {{ item.sAddedDateTime }}
                   </q-item-section>
                   <q-item-section avatar>
-                    <img :src="item.sFavIcon" width="32">
+                    <img 
+                      v-if="!~aWithoutFavIconList.indexOf(item.sFavIcon)" 
+                      :src="item.sFavIcon" 
+                      @error="aWithoutFavIconList.push(item.sFavIcon)" 
+                      width="24"
+                    >
+                    <q-icon v-else name="photo" width="24" />
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>
@@ -369,6 +381,7 @@ export default {
       aDomainsList: [],
       aGroupedLists: [],
       aFavIconList: [],
+      aWithoutFavIconList: [],
       oDomainFavIcons: {},
 
       sSoundPath,
@@ -477,6 +490,7 @@ export default {
 
       $log('fnPlayAudioSignal - oThis.$refs.vue_audio', oThis.$refs.vue_audio);
 
+      oThis.$refs.vue_audio.stop();
       oThis.$refs.vue_audio.play();
     },
 
@@ -512,6 +526,7 @@ export default {
       if (oThis.oConfig.bEnableAutoUpdate && !bOnlyStartAutoUpdate) {
         await oThis.fnUpdateList();
         oThis.fnExportListToJSON();
+        oThis.fnExportGroupedListToJSON();
       }
 
       setTimeout(oThis.fnAutoUpdate, 60000);
@@ -522,9 +537,9 @@ export default {
       $log('fnExportListToJSON');
       var oThis = this;
 
-      fnSaveToJSONFile("list.json", oThis.aList);
+      fnSaveToJSONFile("./results/list.json", oThis.aList);
 
-      oThis.fnShowNotification("Saved to list.json");
+      oThis.fnShowNotification("Saved to ./results/list.json");
     },
 
     fnExportFilteredListToJSON()
@@ -532,9 +547,9 @@ export default {
       $log('fnExportFilteredListToJSON');
       var oThis = this;
 
-      fnSaveToJSONFile("filtered_list.json", oThis.aFilteredList);
+      fnSaveToJSONFile("./results/filtered_list.json", oThis.aFilteredList);
 
-      oThis.fnShowNotification("Saved to filtered_list.json");
+      oThis.fnShowNotification("Saved to ./results/filtered_list.json");
     },
 
     fnExportGroupedListToJSON()
@@ -542,13 +557,27 @@ export default {
       $log('fnExportGroupedListToJSON');
       var oThis = this;
 
-      fnSaveToJSONFile("grouped_list.json", {
+      fnSaveToJSONFile("./results/grouped_list.json", {
         aDomainsList: oThis.aDomainsList,
         aFavIconList: oThis.aFavIconList,
         aGroupedLists: oThis.aGroupedLists
       });
 
-      oThis.fnShowNotification("Saved to grouped_list.json");
+      oThis.fnShowNotification("Saved to ./results/grouped_list.json");
+    },
+
+    fnExportFilteredGroupedListToJSON()
+    {
+      $log('fnExportFilteredGroupedListToJSON');
+      var oThis = this;
+
+      fnSaveToJSONFile("./results/filtered_grouped_list.json", {
+        aDomainsList: oThis.aFilteredDomainsList,
+        aFavIconList: oThis.aFavIconList,
+        aGroupedLists: oThis.aFilteredGroupedLists
+      });
+
+      oThis.fnShowNotification("Saved to ./results/filtered_grouped_list.json");
     },
 
     fnSaveAllPages()
@@ -698,7 +727,7 @@ export default {
       var oThis = this;
 
       try {
-        Object.assign(oThis.oConfig, JSON.parse(fs.readFileSync('./config.json').toString()));
+        Object.assign(oThis.oConfig, JSON.parse(fs.readFileSync('./config/config.json').toString()));
 
         oAPI =  new GetPocketAPI({ 
           sUserName: oThis.oConfig.oUser.sUserName, 
@@ -716,7 +745,7 @@ export default {
       var oThis = this;
 
       try {
-        fs.writeFileSync('./config.json', JSON.stringify(oThis.oConfig));
+        fs.writeFileSync('./config/config.json', JSON.stringify(oThis.oConfig));
         oThis.fnShowNotification("Saved to config.json");
       } catch (oError) {
         $err(oError);
