@@ -1,3 +1,4 @@
+const moment = require('moment');
 
 const axios = require('axios');
 // const qs = require('qs');
@@ -36,6 +37,7 @@ export default class GetPocketAPI
 
     constructor({ sUserName, sPassword, sAPIKey })
     {
+        $log('GetPocketAPI - constructor');
         var oThis = this;
 
         oThis.sUserName = sUserName;
@@ -45,6 +47,7 @@ export default class GetPocketAPI
 
     fnIsSuccessURL(sURL = window.location.toString())
     {
+        $log('fnIsSuccessURL');
         var oThis = this;
 
         return sURL.indexOf(oThis.sRedirectURL) === 0;
@@ -52,6 +55,7 @@ export default class GetPocketAPI
 
     async fnOAuthRequest()
     {
+        $log('fnOAuthRequest');
         var oThis = this;
 
         // https://getpocket.com/v3/oauth/request
@@ -78,6 +82,7 @@ export default class GetPocketAPI
 
     fnOAuthAuthorize()
     {
+        $log('fnOAuthAuthorize');
         var oThis = this;
 
         // https://getpocket.com/v3/oauth/authorize
@@ -156,6 +161,7 @@ detailType
 
     fnGet(oParams = {})
     {
+        $log('fnGet');
         var oThis = this;
 
         // https://getpocket.com/v3/get
@@ -182,6 +188,7 @@ detailType
 
     fnGetAll()
     {
+        $log('fnGetAll');
         var oThis = this;
 
         // https://getpocket.com/v3/get
@@ -189,5 +196,78 @@ detailType
         return oThis.fnGet({ 
             state: 'all'
         });
+    }
+
+    async fnGetAllAsArray()
+    {
+        var oThis = this;
+
+        var oList = await oThis.fnGetAll();
+
+        return Object
+            .values(oList)
+            .sort((a, b) => b.time_added-a.time_added)
+            .map((v) => {
+                Object.defineProperty(v, 'sTitle', { 
+                    get() { return this.resolved_title ? this.resolved_title : this.given_title }
+                });
+    
+                Object.defineProperty(v, 'sURL', { 
+                    get() { return this.resolved_url ? this.resolved_url : this.given_url }
+                });
+    
+                v.sAddedDateTime = moment(v.time_added*1000).format("DD.MM.YYYY HH:mm");
+    
+                v.sDomain = v.sURL.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    
+                return v;
+            });
+    }
+
+    async fnGetAllGrouped()
+    {
+        var oThis = this;
+
+        var aList = await oThis.fnGetAllAsArray();
+
+        var aDomainsList = [];
+        var aFavIconList = [];
+        var aGroupedLists = [];
+
+        aList.forEach((oItem) => {
+            var sDomain = oItem.sDomain;
+
+            var iIndex = aDomainsList.indexOf(sDomain);
+
+            var sFavIcon = oItem.sURL.replace(/(^https?:\/\/[^\/]*?)\/.*?$/, '$1')+'/favicon.ico';
+            var iFavIconIndex = aFavIconList.indexOf(sFavIcon);
+
+            if (!~iFavIconIndex) {
+                iFavIconIndex = aFavIconList.push(sFavIcon) - 1;
+            }
+
+            oItem.iFavIconIndex = iFavIconIndex;
+
+            Object.defineProperty(oItem, 'sFavIcon', { 
+                get() { return aFavIconList[this.iFavIconIndex] }
+            });
+
+            if (!~iIndex) {
+                iIndex = aDomainsList.push(sDomain) - 1;
+            }
+
+            if (!aGroupedLists[iIndex]) {
+                aGroupedLists[iIndex] = [];
+            }
+
+            aGroupedLists[iIndex].push(oItem);
+        });
+
+        return {
+            aList,
+            aDomainsList,
+            aFavIconList,
+            aGroupedLists
+        };
     }
 }
