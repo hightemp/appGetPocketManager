@@ -1,6 +1,6 @@
 # appGetPocketManager (app-get-pocket-manager)
 
-appGetPocketManager
+Менеджер ссылок для GetPocket. Нужен только для выкачивания ссылок в json файл.
 
 ## Install the dependencies
 ```bash
